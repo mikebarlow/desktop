@@ -55,6 +55,24 @@ export function appendWindowIdToUrl(url, id) {
     return url + (url.indexOf('?') === -1 ? '?' : '&') + '_windowId=' + id;
 }
 
+/**
+ * Resolve a URL to an absolute form. Relative paths (e.g. /auth) are resolved
+ * against the Laravel app server. Required because Electron's loadURL expects
+ * absolute URLs.
+ */
+export function resolveUrl(url) {
+    if (!url || typeof url !== 'string') {
+        return url;
+    }
+    const trimmed = url.trim();
+    if (trimmed.startsWith('http://') || trimmed.startsWith('https://') || trimmed.startsWith('file://')) {
+        return trimmed;
+    }
+    const base = `http://127.0.0.1:${state.phpPort}`;
+    return trimmed.startsWith('/') ? base + trimmed : `${base}/${trimmed}`;
+}
+
 export function goToUrl(url, windowId) {
-    state.windows[windowId]?.loadURL(appendWindowIdToUrl(url, windowId));
+    const absoluteUrl = resolveUrl(url);
+    state.windows[windowId]?.loadURL(appendWindowIdToUrl(absoluteUrl, windowId));
 }

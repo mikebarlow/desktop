@@ -52,7 +52,19 @@ export function trimOptions(options) {
 export function appendWindowIdToUrl(url, id) {
     return url + (url.indexOf('?') === -1 ? '?' : '&') + '_windowId=' + id;
 }
+export function resolveUrl(url) {
+    if (!url || typeof url !== 'string') {
+        return url;
+    }
+    const trimmed = url.trim();
+    if (trimmed.startsWith('http://') || trimmed.startsWith('https://') || trimmed.startsWith('file://')) {
+        return trimmed;
+    }
+    const base = `http://127.0.0.1:${state.phpPort}`;
+    return trimmed.startsWith('/') ? base + trimmed : `${base}/${trimmed}`;
+}
 export function goToUrl(url, windowId) {
     var _a;
-    (_a = state.windows[windowId]) === null || _a === void 0 ? void 0 : _a.loadURL(appendWindowIdToUrl(url, windowId));
+    const absoluteUrl = resolveUrl(url);
+    (_a = state.windows[windowId]) === null || _a === void 0 ? void 0 : _a.loadURL(appendWindowIdToUrl(absoluteUrl, windowId));
 }

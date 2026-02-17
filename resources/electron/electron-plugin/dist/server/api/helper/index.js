@@ -1,6 +1,7 @@
 import { shell } from 'electron';
-import { notifyLaravel, goToUrl } from '../../utils.js';
+import { notifyLaravel, goToUrl, appendWindowIdToUrl, resolveUrl } from '../../utils.js';
 import state from '../../state.js';
+const MENUBAR_WINDOW_ID = 'menubar';
 function triggerMenuItemEvent(menuItem, combo) {
     notifyLaravel('events', {
         event: menuItem.event || '\\Native\\Desktop\\Events\\Menu\\MenuItemClicked',
@@ -27,17 +28,26 @@ export function compileMenu(item) {
     if (item.type === 'link') {
         item.type = 'normal';
         item.click = (menuItem, focusedWindow, combo) => {
+            var _a;
             triggerMenuItemEvent(item, combo);
             if (item.openInBrowser) {
                 shell.openExternal(item.url);
                 return;
             }
-            if (!focusedWindow) {
+            let windowId = focusedWindow
+                ? Object.keys(state.windows).find(key => state.windows[key] === focusedWindow)
+                : null;
+            if (!windowId && ((_a = state.activeMenuBar) === null || _a === void 0 ? void 0 : _a.window)) {
+                const menubarWindow = state.activeMenuBar.window;
+                const absoluteUrl = resolveUrl(item.url);
+                menubarWindow.loadURL(appendWindowIdToUrl(absoluteUrl, MENUBAR_WINDOW_ID));
+                menubarWindow.show();
+                menubarWindow.focus();
                 return;
             }
-            const id = Object.keys(state.windows)
-                .find(key => state.windows[key] === focusedWindow);
-            goToUrl(item.url, id);
+            if (windowId) {
+                goToUrl(item.url, windowId);
+            }
         };
         return item;
     }

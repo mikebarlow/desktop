@@ -1,6 +1,8 @@
 import { shell } from 'electron';
-import { notifyLaravel, goToUrl } from '../../utils.js';
+import { notifyLaravel, goToUrl, appendWindowIdToUrl, resolveUrl } from '../../utils.js';
 import state from '../../state.js';
+
+const MENUBAR_WINDOW_ID = 'menubar';
 
 function triggerMenuItemEvent(menuItem, combo) {
     notifyLaravel('events', {
@@ -36,15 +38,23 @@ export function compileMenu (item) {
                 return;
             }
 
-            if (! focusedWindow) {
-                // TODO: Bring a window to the front?
+            // Find target window: focused BrowserWindow, or menubar popup when context menu is shown from tray
+            let windowId = focusedWindow
+                ? Object.keys(state.windows).find(key => state.windows[key] === focusedWindow)
+                : null;
+
+            if (!windowId && state.activeMenuBar?.window) {
+                const menubarWindow = state.activeMenuBar.window;
+                const absoluteUrl = resolveUrl(item.url);
+                menubarWindow.loadURL(appendWindowIdToUrl(absoluteUrl, MENUBAR_WINDOW_ID));
+                menubarWindow.show();
+                menubarWindow.focus();
                 return;
             }
 
-            const id = Object.keys(state.windows)
-                .find(key => state.windows[key] === focusedWindow);
-
-            goToUrl(item.url, id);
+            if (windowId) {
+                goToUrl(item.url, windowId);
+            }
         }
 
         return item;
