@@ -47,8 +47,8 @@ export function compileMenu (item) {
                 const menubarWindow = state.activeMenuBar.window;
                 const absoluteUrl = resolveUrl(item.url);
                 menubarWindow.loadURL(appendWindowIdToUrl(absoluteUrl, MENUBAR_WINDOW_ID));
-                menubarWindow.show();
-                menubarWindow.focus();
+                // Use menubar's showWindow() so the window is positioned under the tray icon
+                state.activeMenuBar.showWindow().catch(() => {});
                 return;
             }
 

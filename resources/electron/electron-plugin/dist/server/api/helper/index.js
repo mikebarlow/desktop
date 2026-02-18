@@ -41,8 +41,7 @@ export function compileMenu(item) {
                 const menubarWindow = state.activeMenuBar.window;
                 const absoluteUrl = resolveUrl(item.url);
                 menubarWindow.loadURL(appendWindowIdToUrl(absoluteUrl, MENUBAR_WINDOW_ID));
-                menubarWindow.show();
-                menubarWindow.focus();
+                state.activeMenuBar.showWindow().catch(() => { });
                 return;
             }
             if (windowId) {
